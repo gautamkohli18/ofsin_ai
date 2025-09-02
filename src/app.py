@@ -23,7 +23,12 @@ st.subheader("🛠 Suggested Resolutions")
 st.dataframe(resolved_df)
 
 st.subheader("🔍 Potential Duplicate Transactions")
-st.write(duplicates if duplicates else "No duplicates found.")
+if duplicates:
+    st.write("Found possible duplicates based on text similarity:")
+    st.dataframe(pd.DataFrame(duplicates, columns=["id_1", "id_2", "field", "value_1", "value_2"]))
+else:
+    st.write("No duplicates found.")
+
 
 st.subheader("🔎 Ask a Question about Disputes")
 query = st.text_input("Enter your query")
