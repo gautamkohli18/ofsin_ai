@@ -11,7 +11,8 @@ def create_dispute_agent(df):
     agent = create_pandas_dataframe_agent(
         llm,
         df,
-        verbose=True
+        verbose=True,
+        allow_dangerous_code=True
     )
     return agent
 
