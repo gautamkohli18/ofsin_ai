@@ -1,8 +1,8 @@
 pandas
 fuzzywuzzy
 python-Levenshtein
-streamlit
 langchain
 langchain-experimental
 requests
 tabulate
+streamlit
