@@ -1,48 +1,101 @@
 import streamlit as st
 import pandas as pd
-from classify_disputes import classify_disputes
-from resolution_suggestions import suggest_resolution
-from fuzzy_duplicates import detect_potential_duplicates
-from query_agent import create_dispute_agent, ask_query
+from langchain_experimental.agents import create_pandas_dataframe_agent
+from langchain_community.llms import Ollama
+import re
 
-st.set_page_config(page_title="AI-Powered Dispute Assistant", layout="wide")
+# ---- Create Agent ----
+def create_dispute_agent(df: pd.DataFrame):
+    llm = Ollama(model="mistral")  # ✅ lightweight, works under 4GB
+    agent = create_pandas_dataframe_agent(
+        llm,
+        df,
+        verbose=True,
+        allow_dangerous_code=True,
+        handle_parsing_errors=True,
+    )
+    return agent, llm
 
-st.title("🤖 AI-Powered Dispute Assistant")
+# ---- Robust Ask Function ----
+def ask_query(agent, llm, query, df: pd.DataFrame = None):
+    query_str = str(query) if query is not None else ""
+    dispute_ids = re.findall(r'\bD0\d+\b', query_str.upper())
 
-# ---- Load Data ----
-disputes_df = pd.read_csv("data/disputes.csv")
-transactions_df = pd.read_csv("data/transactions.csv")
+    if dispute_ids and df is not None:
+        responses = []
+        for dispute_id in dispute_ids:
+            row = df[df['dispute_id'].str.upper() == dispute_id]
+            if row.empty:
+                responses.append(f"No details found for dispute ID {dispute_id}.")
+                continue
 
-# ---- Classify & Suggest ----
-classified_df = classify_disputes(disputes_df)
-classified_df.to_csv("outputs/classified_disputes.csv", index=False)
+            dispute = row.iloc[0]
+            prompt = f"""
+You are a dispute resolution assistant. Summarize this dispute clearly:
 
-resolved_df = suggest_resolution(classified_df)
-resolved_df.to_csv("outputs/resolutions.csv", index=False)
+Dispute ID: {dispute['dispute_id']}
+Customer ID: {dispute['customer_id']}
+Transaction ID: {dispute['txn_id']}
+Description: {dispute['description']}
+Transaction Type: {dispute['txn_type']} via {dispute['channel']}
+Amount: {dispute['amount']}
+Category: {dispute['category']}
+Suggested Resolution: {dispute['suggested_resolution']}
 
-# ---- Detect Duplicates ----
-duplicates = detect_potential_duplicates(transactions_df)
+Write a clear and helpful explanation for the support team.
+"""
+            try:
+                content = llm.invoke(prompt).content
+                responses.append(f"--- Explanation for {dispute_id} ---\n{content}")
+            except Exception as e:
+                responses.append(f"⚠️ Error explaining dispute {dispute_id}: {e}")
 
-# ---- UI Sections ----
-st.subheader("📂 Classified Disputes")
-st.dataframe(classified_df)
+        return "\n\n".join(responses)
+    else:
+        try:
+            return agent.run(query_str)
+        except Exception as e:
+            return f"⚠️ Error while processing query: {e}"
 
-st.subheader("🛠 Suggested Resolutions")
-st.dataframe(resolved_df)
+# ---- Example DataFrame ----
+data = [
+    {
+        "dispute_id": "D001",
+        "customer_id": "C1001",
+        "txn_id": "T9001",
+        "description": "Refund requested for double charge",
+        "txn_type": "Payment",
+        "channel": "Online",
+        "amount": 150.0,
+        "category": "Billing",
+        "suggested_resolution": "Refund the duplicate charge"
+    },
+    {
+        "dispute_id": "D003",
+        "customer_id": "C1003",
+        "txn_id": "T9003",
+        "description": "Late delivery of order",
+        "txn_type": "Order",
+        "channel": "Retail",
+        "amount": 250.0,
+        "category": "Logistics",
+        "suggested_resolution": "Offer 10% discount and expedited delivery"
+    }
+]
+df = pd.DataFrame(data)
 
-st.subheader("🔍 Potential Duplicate Transactions")
-if duplicates:
-    st.write("Found possible duplicates based on text similarity:")
-    st.dataframe(pd.DataFrame(duplicates, columns=["id_1", "id_2", "field", "value_1", "value_2"]))
-else:
-    st.write("No duplicates found.")
+# ---- Streamlit UI ----
+st.title("🔎 Ask a Question about Disputes")
 
-# ---- Agent Query Section ----
-st.subheader("🔎 Ask a Question about Disputes")
 query = st.text_input("Enter your query")
 
-if query:
-    agent = create_dispute_agent(resolved_df)  # ✅ pass dataframe to build agent
-    answer = ask_query(agent, query, resolved_df)  # ✅ pass df for prompting too
-    st.write("**Answer:**")
+if st.button("Submit") and query:
+    # ✅ Create agent and LLM
+    agent, llm = create_dispute_agent(df)
+
+    # ✅ Call the robust ask_query
+    answer = ask_query(agent, llm, query, df=df)
+
+    st.subheader("Answer:")
     st.write(answer)
+
