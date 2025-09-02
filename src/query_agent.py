@@ -1,5 +1,5 @@
 from langchain_community.llms import HuggingFaceHub
-from langchain.agents import create_pandas_dataframe_agent
+from langchain_experimental.agents import create_pandas_dataframe_agent
 import os
 
 def create_dispute_agent(df):
