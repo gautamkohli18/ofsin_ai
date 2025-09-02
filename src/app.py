@@ -46,5 +46,5 @@ query = st.text_input("Enter your query")
 
 if query:
     agent = create_dispute_agent(resolved_df, api_key=API_KEY)  # ✅ pass API key
-    answer = ask_query(agent, resolved_df, query)  # ✅ also pass dataframe
+    answer = ask_query(agent, query)  # ✅ don’t pass dataframe again
     st.write("**Answer:**", answer)
