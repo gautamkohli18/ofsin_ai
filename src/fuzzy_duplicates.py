@@ -9,5 +9,5 @@ def detect_potential_duplicates(transactions_df: pd.DataFrame):
                 t1 = pd.to_datetime(transactions_df.iloc[i]["timestamp"])
                 t2 = pd.to_datetime(transactions_df.iloc[j]["timestamp"])
                 if abs((t1 - t2).total_seconds()) < 300:
-                    duplicates.append((transactions_df.iloc[i]["transaction_id"], transactions_df.iloc[j]["transaction_id"]))
+                    duplicates.append((transactions_df.iloc[i]["txn_id"], transactions_df.iloc[j]["txn_id"]))
     return duplicates
