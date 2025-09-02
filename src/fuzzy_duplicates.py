@@ -1,13 +1,14 @@
 from fuzzywuzzy import fuzz
-import pandas as pd
 
-def detect_potential_duplicates(transactions_df: pd.DataFrame):
+def detect_potential_duplicates(transactions_df):
     duplicates = []
     for i in range(len(transactions_df)):
-        for j in range(i+1, len(transactions_df)):
-            if fuzz.ratio(str(transactions_df.iloc[i]["amount"]), str(transactions_df.iloc[j]["amount"])) > 90:
-                t1 = pd.to_datetime(transactions_df.iloc[i]["timestamp"])
-                t2 = pd.to_datetime(transactions_df.iloc[j]["timestamp"])
-                if abs((t1 - t2).total_seconds()) < 300:
-                    duplicates.append((transactions_df.iloc[i]["txn_id"], transactions_df.iloc[j]["txn_id"]))
+        for j in range(i + 1, len(transactions_df)):
+            desc1 = str(transactions_df.iloc[i]["description"])
+            desc2 = str(transactions_df.iloc[j]["description"])
+            if fuzz.ratio(desc1, desc2) > 90:
+                duplicates.append((
+                    transactions_df.iloc[i].get("transaction_id", i),
+                    transactions_df.iloc[j].get("transaction_id", j)
+                ))
     return duplicates
