@@ -6,3 +6,4 @@ langsmith
 pandas
 fuzzywuzzy
 matplotlib
+huggingface
