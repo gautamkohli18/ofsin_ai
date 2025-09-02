@@ -6,4 +6,4 @@ langsmith
 pandas
 fuzzywuzzy
 matplotlib
-huggingface
+huggingface_hub
