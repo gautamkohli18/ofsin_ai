@@ -5,9 +5,6 @@ from resolution_suggestions import suggest_resolution
 from fuzzy_duplicates import detect_potential_duplicates
 from query_agent import create_dispute_agent, ask_query
 
-# 🔑 Krutrim API key
-API_KEY = "9klDvsb_AT5IRCiiBP00Q"
-
 st.set_page_config(page_title="AI-Powered Dispute Assistant", layout="wide")
 
 st.title("🤖 AI-Powered Dispute Assistant")
@@ -45,6 +42,7 @@ st.subheader("🔎 Ask a Question about Disputes")
 query = st.text_input("Enter your query")
 
 if query:
-    agent = create_dispute_agent(resolved_df, api_key=API_KEY)  # ✅ pass API key
-    answer = ask_query(agent, query)  # ✅ don’t pass dataframe again
-    st.write("**Answer:**", answer)
+    agent = create_dispute_agent(resolved_df)  # ✅ pass dataframe to build agent
+    answer = ask_query(agent, query, resolved_df)  # ✅ pass df for prompting too
+    st.write("**Answer:**")
+    st.write(answer)
