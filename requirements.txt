@@ -1,6 +1,6 @@
 streamlit
 pandas
-torch
+torch==2.2.0+cpu
 numpy
 langchain
 langchain-community
