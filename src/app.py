@@ -1,32 +1,26 @@
 import streamlit as st
 import pandas as pd
-from classifier import classify_disputes
-from resolution import generate_resolutions
-from query_agent import create_dispute_agent, ask_query
+from classify_disputes import classify_disputes
+from resolution_suggestions import suggest_resolutions
 from fuzzy_duplicates import detect_potential_duplicates
+from query_agent import create_dispute_agent, ask_query
 
-st.set_page_config(page_title="AI Dispute Assistant", layout="wide")
-st.title("🤖 AI-Powered Dispute Assistant")
-
+st.title("Osfin AI - Detect Disputes")
 disputes_df = pd.read_csv("data/disputes.csv")
 transactions_df = pd.read_csv("data/transactions.csv")
-
-classified_df = classify_disputes(disputes_df)
-resolved_df = generate_resolutions(classified_df)
-
-st.subheader("📂 Classified Disputes")
-st.dataframe(resolved_df)
-
-classified_df.to_csv("outputs/classified_disputes.csv", index=False)
-resolved_df.to_csv("outputs/resolutions.csv", index=False)
-
+classified_df = classify_disputes(disputes_df, transactions_df)
+st.subheader("📌 Classified Disputes")
+st.dataframe(classified_df.head())
+resolutions_df = suggest_resolutions(classified_df)
+st.subheader("🛠 Suggested Resolutions")
+st.dataframe(resolutions_df.head())
+agent = create_dispute_agent(classified_df)
 st.subheader("🔍 Ask a Question about Disputes")
 query = st.text_input("Enter your query")
 if query:
-    agent = create_dispute_agent(resolved_df)
-    answer = ask_query(agent, query)
-    st.success(answer)
+    try:
+        answer = ask_query(agent, query)
+        st.success(answer)
+    except Exception as e:
+        st.error(f"Error: {e}")
 
-st.subheader("⚡ Potential Duplicate Transactions")
-duplicates = detect_potential_duplicates(transactions_df)
-st.write(duplicates if duplicates else "No duplicates found")
