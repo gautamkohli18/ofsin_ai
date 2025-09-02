@@ -4,7 +4,6 @@ from classify_disputes import classify_disputes
 from resolution_suggestions import suggest_resolutions
 from fuzzy_duplicates import detect_potential_duplicates
 from query_agent import create_dispute_agent, ask_query
-
 st.title("Osfin AI - Detect Disputes")
 disputes_df = pd.read_csv("data/disputes.csv")
 transactions_df = pd.read_csv("data/transactions.csv")
