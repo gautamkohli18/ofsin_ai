@@ -1,6 +1,7 @@
 streamlit
 langchain
 langchain-community
+langchain-experimental
 langsmith
 pandas
 fuzzywuzzy
