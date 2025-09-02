@@ -4,7 +4,7 @@ def classify_disputes(disputes_df, transactions_df):
     results = []
     for _, row in disputes_df.iterrows():
         dispute_id = row["dispute_id"]
-        txn_id = row["transaction_id"]
+        txn_id = row["txn_id"]
         status = row.get("status", "").lower()
         desc = str(row.get("description", "")).lower()
 
